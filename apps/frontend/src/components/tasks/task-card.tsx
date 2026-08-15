@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Task } from "@/lib/task-types";
 import { PriorityBadge } from "./priority-badge";
 import { AvatarGroup } from "./avatar-group";
@@ -11,11 +12,14 @@ export function TaskCard({
   task: Task;
   onDragStart: (e: React.DragEvent, taskId: string) => void;
 }) {
+  const router = useRouter();
+
   return (
     <div
       draggable
       onDragStart={(e) => onDragStart(e, task.id)}
-      className="rounded-lg border border-border bg-card p-3 cursor-grab active:cursor-grabbing hover:border-foreground-muted transition-colors"
+      onClick={() => router.push(`/tasks/${task.id}`)}
+      className="rounded-lg border border-border bg-card p-3 cursor-pointer hover:border-foreground-muted transition-colors"
     >
       <p className="text-sm font-medium mb-2">{task.title}</p>
       <div className="flex items-center justify-between">

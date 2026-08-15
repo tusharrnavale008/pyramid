@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { Task, TaskStatus, TASK_STATUSES, STATUS_LABELS } from "@/lib/task-types";
 import { PriorityBadge } from "./priority-badge";
 import { AvatarGroup } from "./avatar-group";
 
 export function TaskList({ tasks }: { tasks: Task[] }) {
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState<Set<TaskStatus>>(new Set());
 
   function toggle(status: TaskStatus) {
@@ -61,7 +63,8 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
                   {groupTasks.map((task) => (
                     <tr
                       key={task.id}
-                      className="border-b border-border last:border-0 hover:bg-background-secondary"
+                      onClick={() => router.push(`/tasks/${task.id}`)}
+                      className="border-b border-border last:border-0 hover:bg-background-secondary cursor-pointer"
                     >
                       <td className="px-4 py-2.5">{task.title}</td>
                       <td className="px-4 py-2.5">

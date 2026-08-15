@@ -8,6 +8,13 @@ export const STATUS_LABELS: Record<TaskStatus, string> = {
   ON_HOLD: "On Hold",
 };
 
+export const STATUS_COLORS: Record<TaskStatus, string> = {
+  TODO: "#9ca3af",
+  DOING: "#3b82f6",
+  COMPLETED: "#10b981",
+  ON_HOLD: "#f59e0b",
+};
+
 export const TASK_PRIORITIES = [
   "NO_PRIORITY",
   "LOW",
@@ -61,4 +68,25 @@ export interface Task {
   labels: TaskLabel[];
   project?: { id: string; name: string };
   _count?: { subtasks: number; comments: number };
+}
+
+export interface Subtask {
+  id: string;
+  title: string;
+  priority: TaskPriority;
+  memberId: string | null;
+  dueDate: string | null;
+}
+
+export interface Comment {
+  id: string;
+  text: string;
+  createdAt: string;
+  user: PersonSummary;
+}
+
+export interface TaskDetail extends Task {
+  subtasks: Subtask[];
+  comments: Comment[];
+  reporter: PersonSummary | null;
 }
