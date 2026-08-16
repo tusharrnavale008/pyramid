@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Task, TaskStatus, TASK_STATUSES, STATUS_LABELS } from "@/lib/task-types";
+import { Task, TaskStatus, TASK_STATUSES, STATUS_LABELS, FieldKey } from "@/lib/task-types";
 import { TaskCard } from "./task-card";
 
 export function KanbanBoard({
   tasks,
   onStatusChange,
+  visibleFields,
 }: {
   tasks: Task[];
   onStatusChange: (taskId: string, status: TaskStatus) => void;
+  visibleFields: Set<FieldKey>;
 }) {
   const [dragOverColumn, setDragOverColumn] = useState<TaskStatus | null>(null);
 
@@ -50,7 +52,12 @@ export function KanbanBoard({
             </div>
             <div className="flex flex-col gap-2 min-h-[40px]">
               {columnTasks.map((task) => (
-                <TaskCard key={task.id} task={task} onDragStart={handleDragStart} />
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onDragStart={handleDragStart}
+                  visibleFields={visibleFields}
+                />
               ))}
             </div>
           </div>

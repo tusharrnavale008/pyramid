@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useTheme } from "./theme-provider";
 import {
   THEME_MODES,
@@ -27,8 +28,15 @@ function ChevronRightIcon() {
 
 type SubmenuKey = "theme" | "color" | null;
 
-export function ProfileMenu({ name, email }: { name: string; email: string }) {
+export function ProfileMenu({
+  name,
+  email,
+}: {
+  name: string;
+  email: string;
+}) {
   const { theme, colorMode, setTheme, setColorMode } = useTheme();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [submenu, setSubmenu] = useState<SubmenuKey>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -129,7 +137,14 @@ export function ProfileMenu({ name, email }: { name: string; email: string }) {
 
           <div className="my-1 border-t border-border" />
 
-          <button className="w-full flex items-center px-3 py-2 text-sm hover:bg-background-secondary rounded-md mx-1" style={{ width: "calc(100% - 8px)" }}>
+          <button
+            onClick={() => {
+              router.push("/settings");
+              setOpen(false);
+            }}
+            className="w-full flex items-center px-3 py-2 text-sm hover:bg-background-secondary rounded-md mx-1"
+            style={{ width: "calc(100% - 8px)" }}
+          >
             Settings
           </button>
         </div>

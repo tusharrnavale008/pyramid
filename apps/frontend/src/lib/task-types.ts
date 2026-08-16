@@ -90,3 +90,13 @@ export interface TaskDetail extends Task {
   comments: Comment[];
   reporter: PersonSummary | null;
 }
+
+export const FIELD_KEYS = ["priority", "members", "dueDate", "labels"] as const;
+export type FieldKey = (typeof FIELD_KEYS)[number];
+
+export const FIELD_LABELS: Record<FieldKey, string> = {
+  priority: "Priority",
+  members: "Members",
+  dueDate: "Due Date",
+  labels: "Labels",
+};

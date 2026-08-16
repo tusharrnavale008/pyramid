@@ -6,10 +6,11 @@ import { LayoutGrid, List as ListIcon, Plus, ChevronRight } from "lucide-react";
 import { KanbanBoard } from "@/components/tasks/kanban-board";
 import { TaskList } from "@/components/tasks/task-list";
 import { AddTaskDialog } from "@/components/tasks/add-task-dialog";
+import { FieldsDropdown } from "@/components/tasks/fields-dropdown";
 import { getProject } from "@/lib/projects-api";
 import { createTask, updateTask } from "@/lib/tasks-api";
 import { ProjectDetail } from "@/lib/project-types";
-import { TaskStatus, TaskPriority } from "@/lib/task-types";
+import { TaskStatus, TaskPriority, FieldKey, FIELD_KEYS } from "@/lib/task-types";
 
 type ViewMode = "board" | "list";
 
@@ -22,6 +23,7 @@ export default function ProjectDetailPage() {
   const [notFound, setNotFound] = useState(false);
   const [view, setView] = useState<ViewMode>("board");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [visibleFields, setVisibleFields] = useState<Set<FieldKey>>(new Set(FIELD_KEYS));
 
   const load = useCallback(async () => {
     try {
@@ -37,6 +39,18 @@ export default function ProjectDetailPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  function toggleField(key: FieldKey) {
+    setVisibleFields((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }
 
   async function handleStatusChange(taskId: string, status: TaskStatus) {
     if (!project) return;
@@ -91,6 +105,8 @@ export default function ProjectDetailPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <FieldsDropdown visible={visibleFields} onToggle={toggleField} />
+
           <div className="flex items-center rounded-lg border border-border overflow-hidden">
             <button
               onClick={() => setView("list")}
@@ -121,9 +137,13 @@ export default function ProjectDetailPage() {
       </header>
 
       {view === "board" ? (
-        <KanbanBoard tasks={project.tasks} onStatusChange={handleStatusChange} />
+        <KanbanBoard
+          tasks={project.tasks}
+          onStatusChange={handleStatusChange}
+          visibleFields={visibleFields}
+        />
       ) : (
-        <TaskList tasks={project.tasks} />
+        <TaskList tasks={project.tasks} visibleFields={visibleFields} />
       )}
 
       <AddTaskDialog

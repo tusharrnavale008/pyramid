@@ -6,13 +6,14 @@ import { TopBar } from "@/components/layout/topbar";
 import { KanbanBoard } from "@/components/tasks/kanban-board";
 import { TaskList } from "@/components/tasks/task-list";
 import { AddTaskDialog } from "@/components/tasks/add-task-dialog";
+import { FieldsDropdown } from "@/components/tasks/fields-dropdown";
 import {
   listWorkspaceTasks,
   updateTask,
   createTask,
   getOrCreateDefaultProject,
 } from "@/lib/tasks-api";
-import { Task, TaskStatus, TaskPriority } from "@/lib/task-types";
+import { Task, TaskStatus, TaskPriority, FieldKey, FIELD_KEYS } from "@/lib/task-types";
 
 type ViewMode = "board" | "list";
 
@@ -23,6 +24,7 @@ export default function TasksPage() {
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [visibleFields, setVisibleFields] = useState<Set<FieldKey>>(new Set(FIELD_KEYS));
 
   const loadTasks = useCallback(async () => {
     try {
@@ -38,6 +40,18 @@ export default function TasksPage() {
   useEffect(() => {
     loadTasks();
   }, [loadTasks]);
+
+  function toggleField(key: FieldKey) {
+    setVisibleFields((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }
 
   async function handleStatusChange(taskId: string, status: TaskStatus) {
     setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status } : t)));
@@ -76,6 +90,8 @@ export default function TasksPage() {
                 className="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-border bg-background w-40 outline-none focus:border-foreground-muted"
               />
             </div>
+
+            <FieldsDropdown visible={visibleFields} onToggle={toggleField} />
 
             <div className="flex items-center rounded-lg border border-border overflow-hidden">
               <button
@@ -117,9 +133,13 @@ export default function TasksPage() {
           {error}
         </div>
       ) : view === "board" ? (
-        <KanbanBoard tasks={filteredTasks} onStatusChange={handleStatusChange} />
+        <KanbanBoard
+          tasks={filteredTasks}
+          onStatusChange={handleStatusChange}
+          visibleFields={visibleFields}
+        />
       ) : (
-        <TaskList tasks={filteredTasks} />
+        <TaskList tasks={filteredTasks} visibleFields={visibleFields} />
       )}
 
       <AddTaskDialog

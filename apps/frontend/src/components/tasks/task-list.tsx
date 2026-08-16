@@ -3,11 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown } from "lucide-react";
-import { Task, TaskStatus, TASK_STATUSES, STATUS_LABELS } from "@/lib/task-types";
+import { Task, TaskStatus, TASK_STATUSES, STATUS_LABELS, FieldKey } from "@/lib/task-types";
 import { PriorityBadge } from "./priority-badge";
 import { AvatarGroup } from "./avatar-group";
 
-export function TaskList({ tasks }: { tasks: Task[] }) {
+export function TaskList({
+  tasks,
+  visibleFields,
+}: {
+  tasks: Task[];
+  visibleFields: Set<FieldKey>;
+}) {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState<Set<TaskStatus>>(new Set());
 
@@ -54,9 +60,15 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
                 <thead>
                   <tr className="text-xs text-foreground-muted border-b border-border">
                     <th className="text-left font-medium px-4 py-2">Task</th>
-                    <th className="text-left font-medium px-4 py-2 w-28">Priority</th>
-                    <th className="text-left font-medium px-4 py-2 w-24">Members</th>
-                    <th className="text-left font-medium px-4 py-2 w-28">Due Date</th>
+                    {visibleFields.has("priority") && (
+                      <th className="text-left font-medium px-4 py-2 w-28">Priority</th>
+                    )}
+                    {visibleFields.has("members") && (
+                      <th className="text-left font-medium px-4 py-2 w-24">Members</th>
+                    )}
+                    {visibleFields.has("dueDate") && (
+                      <th className="text-left font-medium px-4 py-2 w-28">Due Date</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -67,21 +79,27 @@ export function TaskList({ tasks }: { tasks: Task[] }) {
                       className="border-b border-border last:border-0 hover:bg-background-secondary cursor-pointer"
                     >
                       <td className="px-4 py-2.5">{task.title}</td>
-                      <td className="px-4 py-2.5">
-                        <PriorityBadge priority={task.priority} />
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <AvatarGroup people={task.assignees.map((a) => a.user)} />
-                      </td>
-                      <td className="px-4 py-2.5 text-foreground-muted">
-                        {task.dueDate
-                          ? new Date(task.dueDate).toLocaleDateString("en-US", {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                            })
-                          : "—"}
-                      </td>
+                      {visibleFields.has("priority") && (
+                        <td className="px-4 py-2.5">
+                          <PriorityBadge priority={task.priority} />
+                        </td>
+                      )}
+                      {visibleFields.has("members") && (
+                        <td className="px-4 py-2.5">
+                          <AvatarGroup people={task.assignees.map((a) => a.user)} />
+                        </td>
+                      )}
+                      {visibleFields.has("dueDate") && (
+                        <td className="px-4 py-2.5 text-foreground-muted">
+                          {task.dueDate
+                            ? new Date(task.dueDate).toLocaleDateString("en-US", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })
+                            : "—"}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
