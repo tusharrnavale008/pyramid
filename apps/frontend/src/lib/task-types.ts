@@ -46,12 +46,22 @@ export interface PersonSummary {
   avatarUrl: string | null;
 }
 
+export interface WorkspaceMemberSummary extends PersonSummary {
+  email: string;
+}
+
 export interface TaskAssignee {
   user: PersonSummary;
 }
 
+export interface Label {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export interface TaskLabel {
-  label: { id: string; name: string; color: string };
+  label: Label;
 }
 
 export interface Task {
@@ -85,9 +95,16 @@ export interface Comment {
   user: PersonSummary;
 }
 
+export interface TaskResourceItem {
+  id: string;
+  label: string;
+  url: string;
+}
+
 export interface TaskDetail extends Task {
   subtasks: Subtask[];
   comments: Comment[];
+  resources: TaskResourceItem[];
   reporter: PersonSummary | null;
 }
 

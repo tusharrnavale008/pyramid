@@ -15,10 +15,8 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { CreateSubtaskDto } from './dto/create-subtask.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { CreateResourceDto } from './dto/create-resource.dto';
 
-// No controller-level route prefix — each handler declares its own full
-// path below, so "/tasks" (all), "/projects/:projectId/tasks" (nested),
-// and "/tasks/:id" (single-task ops) all live in one place.
 @UseGuards(JwtAuthGuard)
 @Controller()
 export class TasksController {
@@ -81,5 +79,41 @@ export class TasksController {
     @Body() dto: CreateCommentDto,
   ) {
     return this.tasksService.addComment(userId, id, dto);
+  }
+
+  @Post('tasks/:id/labels/:labelId')
+  attachLabel(
+    @CurrentUser() userId: string,
+    @Param('id') id: string,
+    @Param('labelId') labelId: string,
+  ) {
+    return this.tasksService.attachLabel(userId, id, labelId);
+  }
+
+  @Delete('tasks/:id/labels/:labelId')
+  detachLabel(
+    @CurrentUser() userId: string,
+    @Param('id') id: string,
+    @Param('labelId') labelId: string,
+  ) {
+    return this.tasksService.detachLabel(userId, id, labelId);
+  }
+
+  @Post('tasks/:id/resources')
+  addResource(
+    @CurrentUser() userId: string,
+    @Param('id') id: string,
+    @Body() dto: CreateResourceDto,
+  ) {
+    return this.tasksService.addResource(userId, id, dto);
+  }
+
+  @Delete('tasks/:id/resources/:resourceId')
+  removeResource(
+    @CurrentUser() userId: string,
+    @Param('id') id: string,
+    @Param('resourceId') resourceId: string,
+  ) {
+    return this.tasksService.removeResource(userId, id, resourceId);
   }
 }

@@ -4,6 +4,7 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { CreateSubtaskDto } from './dto/create-subtask.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { CreateResourceDto } from './dto/create-resource.dto';
 
 const USER_SUMMARY = { id: true, fullName: true, avatarUrl: true } as const;
 
@@ -11,12 +12,6 @@ const USER_SUMMARY = { id: true, fullName: true, avatarUrl: true } as const;
 export class TasksService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Confirms the project exists AND belongs to a workspace the current
-   * user is a member of. Every task operation below goes through a
-   * project (directly or via the task's projectId), so this one check
-   * is what keeps users from touching data outside their workspace.
-   */
   private async assertProjectAccess(userId: string, projectId: string) {
     const project = await this.prisma.project.findFirst({
       where: { id: projectId, workspace: { members: { some: { userId } } } },
@@ -79,6 +74,7 @@ export class TasksService {
         assignees: { include: { user: { select: USER_SUMMARY } } },
         labels: { include: { label: true } },
         subtasks: { orderBy: { createdAt: 'asc' } },
+        resources: { orderBy: { createdAt: 'asc' } },
         comments: {
           include: { user: { select: USER_SUMMARY } },
           orderBy: { createdAt: 'asc' },
@@ -140,5 +136,34 @@ export class TasksService {
       data: { taskId, userId, text: dto.text },
       include: { user: { select: USER_SUMMARY } },
     });
+  }
+
+  async attachLabel(userId: string, taskId: string, labelId: string) {
+    await this.findOne(userId, taskId);
+    return this.prisma.taskLabel.upsert({
+      where: { taskId_labelId: { taskId, labelId } },
+      create: { taskId, labelId },
+      update: {},
+      include: { label: true },
+    });
+  }
+
+  async detachLabel(userId: string, taskId: string, labelId: string) {
+    await this.findOne(userId, taskId);
+    await this.prisma.taskLabel.deleteMany({ where: { taskId, labelId } });
+    return { success: true };
+  }
+
+  async addResource(userId: string, taskId: string, dto: CreateResourceDto) {
+    await this.findOne(userId, taskId);
+    return this.prisma.taskResource.create({
+      data: { taskId, label: dto.label, url: dto.url },
+    });
+  }
+
+  async removeResource(userId: string, taskId: string, resourceId: string) {
+    await this.findOne(userId, taskId);
+    await this.prisma.taskResource.deleteMany({ where: { id: resourceId, taskId } });
+    return { success: true };
   }
 }

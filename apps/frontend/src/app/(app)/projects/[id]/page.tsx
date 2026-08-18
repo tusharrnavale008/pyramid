@@ -92,8 +92,8 @@ export default function ProjectDetailPage() {
 
   return (
     <>
-      <header className="h-14 shrink-0 border-b border-border flex items-center justify-between px-6">
-        <div className="flex items-center gap-1.5 text-sm">
+      <header className="min-h-14 shrink-0 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 sm:px-6 py-2 sm:py-0">
+        <div className="flex items-center gap-1.5 text-sm shrink-0">
           <button
             onClick={() => router.push("/projects")}
             className="text-foreground-muted hover:text-foreground"
@@ -104,7 +104,7 @@ export default function ProjectDetailPage() {
           <span className="font-semibold">{project.name}</span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto py-1">
           <FieldsDropdown visible={visibleFields} onToggle={toggleField} />
 
           <div className="flex items-center rounded-lg border border-border overflow-hidden">

@@ -56,6 +56,7 @@ export function TaskList({
             </button>
 
             {!isCollapsed && (
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-xs text-foreground-muted border-b border-border">
@@ -104,6 +105,7 @@ export function TaskList({
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         );

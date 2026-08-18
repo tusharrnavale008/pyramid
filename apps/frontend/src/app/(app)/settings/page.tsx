@@ -45,20 +45,20 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="flex-1 flex overflow-hidden">
-      <aside className="w-56 shrink-0 border-r border-border p-3">
+    <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
+      <aside className="w-full lg:w-56 shrink-0 border-b lg:border-b-0 lg:border-r border-border p-3">
         <button
           onClick={() => router.push("/tasks")}
           className="flex items-center gap-1 text-sm text-foreground-muted hover:text-foreground mb-4 px-1"
         >
           <ArrowLeft size={14} /> Back to app
         </button>
-        <nav className="flex flex-col gap-0.5">
+        <nav className="flex flex-row lg:flex-col gap-0.5 overflow-x-auto">
           {(["profile", "theme", "color"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className="text-left px-2 py-1.5 rounded-lg text-sm capitalize"
+              className="text-left px-2 py-1.5 rounded-lg text-sm capitalize shrink-0"
               style={{ background: tab === t ? "var(--bg-secondary)" : "transparent" }}
             >
               {t}
@@ -67,7 +67,7 @@ export default function SettingsPage() {
         </nav>
       </aside>
 
-      <div className="flex-1 overflow-y-auto p-8">
+      <div className="flex-1 lg:overflow-y-auto p-6 sm:p-8">
         <div className="max-w-xl">
           {tab === "profile" && (
             <>

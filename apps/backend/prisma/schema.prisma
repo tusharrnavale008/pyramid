@@ -63,6 +63,7 @@ model Workspace {
 
   members  WorkspaceMember[]
   projects Project[]
+  labels   Label[]
 }
 
 model WorkspaceMember {
@@ -111,6 +112,17 @@ model Task {
   labels     TaskLabel[]
   subtasks   Subtask[]
   comments   Comment[]
+  resources  TaskResource[]
+}
+
+model TaskResource {
+  id        String   @id @default(cuid())
+  taskId    String
+  label     String
+  url       String
+  createdAt DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
 }
 
 model TaskAssignee {
@@ -125,11 +137,15 @@ model TaskAssignee {
 }
 
 model Label {
-  id    String @id @default(cuid())
-  name  String @unique
-  color String @default("#6b7280")
+  id          String @id @default(cuid())
+  workspaceId String
+  name        String
+  color       String @default("#6b7280")
 
-  tasks TaskLabel[]
+  workspace Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  tasks     TaskLabel[]
+
+  @@unique([workspaceId, name])
 }
 
 model TaskLabel {

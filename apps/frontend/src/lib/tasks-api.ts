@@ -1,5 +1,15 @@
 import { apiFetch } from "./api-client";
-import { Task, TaskDetail, TaskStatus, TaskPriority, Subtask, Comment } from "./task-types";
+import {
+  Task,
+  TaskDetail,
+  TaskStatus,
+  TaskPriority,
+  Subtask,
+  Comment,
+  Label,
+  TaskLabel,
+  TaskResourceItem,
+} from "./task-types";
 
 export function listWorkspaceTasks() {
   return apiFetch<Task[]>("/tasks");
@@ -21,7 +31,9 @@ export interface TaskInput {
   description?: string;
   status?: TaskStatus;
   priority?: TaskPriority;
+  startDate?: string;
   dueDate?: string;
+  assigneeIds?: string[];
 }
 
 export function createTask(projectId: string, input: TaskInput) {
@@ -59,6 +71,46 @@ export function addComment(taskId: string, text: string) {
   return apiFetch<Comment>(`/tasks/${taskId}/comments`, {
     method: "POST",
     body: JSON.stringify({ text }),
+  });
+}
+
+// --- Labels ---
+
+export function listLabels() {
+  return apiFetch<Label[]>("/labels");
+}
+
+export function createLabel(name: string, color: string) {
+  return apiFetch<Label>("/labels", {
+    method: "POST",
+    body: JSON.stringify({ name, color }),
+  });
+}
+
+export function attachLabel(taskId: string, labelId: string) {
+  return apiFetch<TaskLabel>(`/tasks/${taskId}/labels/${labelId}`, {
+    method: "POST",
+  });
+}
+
+export function detachLabel(taskId: string, labelId: string) {
+  return apiFetch<{ success: boolean }>(`/tasks/${taskId}/labels/${labelId}`, {
+    method: "DELETE",
+  });
+}
+
+// --- Resources ---
+
+export function addResource(taskId: string, label: string, url: string) {
+  return apiFetch<TaskResourceItem>(`/tasks/${taskId}/resources`, {
+    method: "POST",
+    body: JSON.stringify({ label, url }),
+  });
+}
+
+export function removeResource(taskId: string, resourceId: string) {
+  return apiFetch<{ success: boolean }>(`/tasks/${taskId}/resources/${resourceId}`, {
+    method: "DELETE",
   });
 }
 

@@ -87,7 +87,7 @@ export default function TasksPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search"
-                className="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-border bg-background w-40 outline-none focus:border-foreground-muted"
+                className="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-border bg-background w-28 sm:w-40 outline-none focus:border-foreground-muted"
               />
             </div>
 

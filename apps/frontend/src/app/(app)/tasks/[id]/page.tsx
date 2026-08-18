@@ -8,10 +8,26 @@ import {
   updateTask,
   addSubtask as apiAddSubtask,
   addComment as apiAddComment,
+  listLabels,
+  createLabel,
+  attachLabel,
+  detachLabel,
+  addResource as apiAddResource,
+  removeResource as apiRemoveResource,
 } from "@/lib/tasks-api";
-import { TaskDetail, TaskStatus, TaskPriority } from "@/lib/task-types";
+import { listWorkspaceMembers } from "@/lib/workspace-api";
+import {
+  TaskDetail,
+  TaskStatus,
+  TaskPriority,
+  Label,
+  WorkspaceMemberSummary,
+} from "@/lib/task-types";
 import { StatusSelect } from "@/components/tasks/status-select";
 import { PrioritySelect } from "@/components/tasks/priority-select";
+import { MembersPicker } from "@/components/tasks/members-picker";
+import { LabelsPicker } from "@/components/tasks/labels-picker";
+import { ResourcesSection } from "@/components/tasks/resources-section";
 import { SubtasksSection } from "@/components/tasks/subtasks-section";
 import { CommentsSection } from "@/components/tasks/comments-section";
 
@@ -20,6 +36,8 @@ export default function TaskDetailPage() {
   const router = useRouter();
 
   const [task, setTask] = useState<TaskDetail | null>(null);
+  const [allMembers, setAllMembers] = useState<WorkspaceMemberSummary[]>([]);
+  const [allLabels, setAllLabels] = useState<Label[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [title, setTitle] = useState("");
@@ -27,10 +45,16 @@ export default function TaskDetailPage() {
 
   const load = useCallback(async () => {
     try {
-      const data = await getTask(params.id);
-      setTask(data);
-      setTitle(data.title);
-      setDescription(data.description ?? "");
+      const [taskData, membersData, labelsData] = await Promise.all([
+        getTask(params.id),
+        listWorkspaceMembers(),
+        listLabels(),
+      ]);
+      setTask(taskData);
+      setAllMembers(membersData);
+      setAllLabels(labelsData);
+      setTitle(taskData.title);
+      setDescription(taskData.description ?? "");
     } catch {
       setNotFound(true);
     } finally {
@@ -66,6 +90,44 @@ export default function TaskDetailPage() {
     await updateTask(task.id, { priority });
   }
 
+  async function handleStartDateChange(value: string) {
+    if (!task) return;
+    setTask({ ...task, startDate: value || null });
+    await updateTask(task.id, { startDate: value || undefined });
+  }
+
+  async function handleDueDateChange(value: string) {
+    if (!task) return;
+    setTask({ ...task, dueDate: value || null });
+    await updateTask(task.id, { dueDate: value || undefined });
+  }
+
+  async function handleMembersChange(ids: string[]) {
+    if (!task) return;
+    const updated = await updateTask(task.id, { assigneeIds: ids });
+    setTask({ ...task, assignees: updated.assignees });
+  }
+
+  async function handleToggleLabel(labelId: string) {
+    if (!task) return;
+    const isAttached = task.labels.some((l) => l.label.id === labelId);
+    if (isAttached) {
+      await detachLabel(task.id, labelId);
+      setTask({ ...task, labels: task.labels.filter((l) => l.label.id !== labelId) });
+    } else {
+      const taskLabel = await attachLabel(task.id, labelId);
+      setTask({ ...task, labels: [...task.labels, taskLabel] });
+    }
+  }
+
+  async function handleCreateLabel(name: string, color: string) {
+    if (!task) return;
+    const newLabel = await createLabel(name, color);
+    setAllLabels((prev) => [...prev, newLabel]);
+    const taskLabel = await attachLabel(task.id, newLabel.id);
+    setTask({ ...task, labels: [...task.labels, taskLabel] });
+  }
+
   async function handleAddSubtask(subtaskTitle: string) {
     if (!task) return;
     const newSubtask = await apiAddSubtask(task.id, subtaskTitle);
@@ -76,6 +138,18 @@ export default function TaskDetailPage() {
     if (!task) return;
     const newComment = await apiAddComment(task.id, text);
     setTask({ ...task, comments: [...task.comments, newComment] });
+  }
+
+  async function handleAddResource(label: string, url: string) {
+    if (!task) return;
+    const newResource = await apiAddResource(task.id, label, url);
+    setTask({ ...task, resources: [...task.resources, newResource] });
+  }
+
+  async function handleRemoveResource(resourceId: string) {
+    if (!task) return;
+    await apiRemoveResource(task.id, resourceId);
+    setTask({ ...task, resources: task.resources.filter((r) => r.id !== resourceId) });
   }
 
   if (loading) {
@@ -97,9 +171,13 @@ export default function TaskDetailPage() {
     );
   }
 
+  const selectedLabelIds = task.labels.map((l) => l.label.id);
+  const selectedMemberIds = task.assignees.map((a) => a.user.id);
+
   return (
-    <div className="flex-1 flex overflow-hidden">
-      <div className="flex-1 overflow-y-auto p-6">
+    <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
+      {/* Main content */}
+      <div className="flex-1 lg:overflow-y-auto p-4 sm:p-6">
         <button
           onClick={() => router.push("/tasks")}
           className="flex items-center gap-1 text-sm text-foreground-muted hover:text-foreground mb-4"
@@ -123,24 +201,39 @@ export default function TaskDetailPage() {
           className="w-full text-sm text-foreground-muted outline-none bg-transparent resize-none mb-4"
         />
 
-        {task.labels.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {task.labels.map((l) => (
+        <div className="flex flex-wrap items-center gap-1.5 mb-5">
+          {task.labels.map((l) => (
+            <span
+              key={l.label.id}
+              className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border border-border"
+            >
               <span
-                key={l.label.id}
-                className="text-xs px-2 py-0.5 rounded-full border border-border"
-              >
-                {l.label.name}
-              </span>
-            ))}
-          </div>
-        )}
+                className="h-1.5 w-1.5 rounded-full shrink-0"
+                style={{ background: l.label.color }}
+              />
+              {l.label.name}
+            </span>
+          ))}
+          <LabelsPicker
+            allLabels={allLabels}
+            selectedIds={selectedLabelIds}
+            onToggle={handleToggleLabel}
+            onCreate={handleCreateLabel}
+          />
+        </div>
+
+        <ResourcesSection
+          resources={task.resources}
+          onAdd={handleAddResource}
+          onRemove={handleRemoveResource}
+        />
 
         <SubtasksSection subtasks={task.subtasks} onAdd={handleAddSubtask} />
         <CommentsSection comments={task.comments} onAdd={handleAddComment} />
       </div>
 
-      <div className="w-64 shrink-0 border-l border-border p-4 overflow-y-auto">
+      {/* Right panel — Details */}
+      <div className="w-full lg:w-64 shrink-0 border-t lg:border-t-0 lg:border-l border-border p-4 lg:overflow-y-auto">
         <h3 className="text-xs font-semibold text-foreground-muted uppercase tracking-wide mb-3">
           Details
         </h3>
@@ -154,6 +247,37 @@ export default function TaskDetailPage() {
             <PrioritySelect value={task.priority} onChange={handlePriorityChange} />
           </div>
           <div className="flex items-center justify-between">
+            <span className="text-foreground-muted">Members</span>
+            <MembersPicker
+              allMembers={allMembers}
+              selectedIds={selectedMemberIds}
+              onChange={handleMembersChange}
+            />
+          </div>
+
+          <div className="pt-2 border-t border-border flex flex-col gap-2">
+            <span className="text-foreground-muted text-xs uppercase tracking-wide">Dates</span>
+            <label className="flex items-center justify-between">
+              <span className="text-foreground-muted text-xs">Start</span>
+              <input
+                type="date"
+                value={task.startDate ? task.startDate.slice(0, 10) : ""}
+                onChange={(e) => handleStartDateChange(e.target.value)}
+                className="text-sm bg-transparent outline-none text-right"
+              />
+            </label>
+            <label className="flex items-center justify-between">
+              <span className="text-foreground-muted text-xs">Due</span>
+              <input
+                type="date"
+                value={task.dueDate ? task.dueDate.slice(0, 10) : ""}
+                onChange={(e) => handleDueDateChange(e.target.value)}
+                className="text-sm bg-transparent outline-none text-right"
+              />
+            </label>
+          </div>
+
+          <div className="pt-2 border-t border-border flex items-center justify-between">
             <span className="text-foreground-muted">Reporter</span>
             <span className="truncate max-w-[120px]">{task.reporter?.fullName ?? "—"}</span>
           </div>
