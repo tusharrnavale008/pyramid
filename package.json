@@ -1,12 +1,4 @@
 {
   "name": "pyramid-assessment",
-  "private": true,
-  "workspaces": [
-    "apps/frontend",
-    "apps/backend"
-  ],
-  "scripts": {
-    "dev:frontend": "npm run dev --workspace=apps/frontend",
-    "dev:backend": "npm run start:dev --workspace=apps/backend"
-  }
+  "private": true
 }
