@@ -21,7 +21,7 @@ export default function LoginPage() {
       setError(
         err instanceof ApiError
           ? err.message
-          : "Could not reach the server. Is the backend running?",
+          : "Could not reach the server.Check Is your backend running?",
       );
     } finally {
       setLoading(false);
